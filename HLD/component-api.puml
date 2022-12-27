@@ -1,0 +1,59 @@
+@startuml pyor-api-component
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+
+!include FONTAWESOME/users.puml
+!include FONTAWESOME/sms.puml
+!include FONTAWESOME/voicemail.puml   
+!include FONTAWESOME/mailchimp.puml
+!include FONTAWESOME/wrench.puml
+!include FONTAWESOME/bell.puml
+
+!include FONTAWESOME/python.puml
+!include FONTAWESOME/js.puml
+!include FONTAWESOME/vuejs.puml
+!include FONTAWESOME/warehouse.puml
+!include FONTAWESOME/aws.puml
+!include FONTAWESOME/watchman_monitoring.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Component Diagram for Pyor-API-Backend
+
+
+Person_Ext(user,"Data Analysts","DAUs",$sprite="users")
+
+Container(backend, "Backend Application", "Docker+go/python", "Business Layer-Provides access to services via API",$sprite="python")
+Container(frontend,"Frontend Application", "Vue3/ReactJS","Presentation Layer-UI",$sprite="js")
+ContainerDb(blockchainDB,"Blockchain SQL DB","aws rds",$sprite="aws")
+
+Container(watchdog,"Watchdog","Logrus,Datadog integrated","24/7 S/W logger",$sprite="watchman_monitoring")
+
+ContainerDb(eventBus,"Event Bus","Kafka")
+
+
+Container_Boundary(backend, "API Application") {
+    Component(auth, "Auth Controller", "MVC Rest Controller", "Facilitates Authentication/Authorization for client-apis, manages sessions")
+    Component(services,"Services Controller","MVC Rest Controller","integrates core-services-sms,serves api endpoints to fetch blockchain data")
+
+    ComponentDb(db,"Pyor User DB","aws rds","store client-subscriptions,credentials,ACLs & logs",$sprite="aws")
+
+    Rel(auth,db,"uses","sql")
+    Rel(services,db,"uses","sql")
+
+    Rel(watchdog,auth,"uses","JSON/HTTPS/grpc")
+    Rel(watchdog,services,"uses","JSON/HTTPS/grpc")
+
+    Rel(frontend,services,"uses","api")
+    Rel(frontend,auth,"uses","api")
+
+    Rel(services,eventBus,"write events")
+
+    Rel(services,blockchainDB,"select queries","uses","sql")
+
+}
+
+@enduml

@@ -1,0 +1,59 @@
+@startuml pyor-container
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+
+!include FONTAWESOME/users.puml
+!include FONTAWESOME/sms.puml
+!include FONTAWESOME/voicemail.puml   
+!include FONTAWESOME/mailchimp.puml
+!include FONTAWESOME/wrench.puml
+!include FONTAWESOME/bell.puml
+
+!include FONTAWESOME/python.puml
+!include FONTAWESOME/js.puml
+!include FONTAWESOME/vuejs.puml
+!include FONTAWESOME/warehouse.puml
+!include FONTAWESOME/aws.puml
+!include FONTAWESOME/watchman_monitoring.puml
+
+!include FONTAWESOME/server.puml
+
+Person_Ext(user,"Data Analysts","DAUs",$sprite="users")
+
+System_Ext(node,"Bitcoin Node","An open source client hosted in aws cloud","go/c/rust",$sprite="server")
+
+System_Boundary(pyor,"Pyor"){
+  ' Container(admin, "Admin Panel","reactjs")
+  Container(backend, "Backend Application", "Docker+go/python", "Business Layer-Provides access to services via API",$sprite="python")
+  Container(frontend,"Frontend Application", "Vue3/ReactJS","Presentation Layer-UI",$sprite="js")
+'data layer
+  ContainerDb(db,"Blockchain SQL DB","aws rds",$sprite="aws")
+  ContainerDb(privateDB,"Pyor User DB","aws rds",$sprite="aws")
+
+  Container(watchdog,"Watchdog","Logrus,Datadog integrated","24/7 S/W logger",$sprite="watchman_monitoring")
+
+  Container(notification,"Notification Service", "go/node/python","Side car-notifies user using pub-sub mechanism",$sprite="bell")
+  ContainerDb(eventBus,"Event Bus","Kafka")
+
+  Rel(user,frontend,"read aggregated data","uses","https")
+  Rel(frontend,backend,"api requests","uses","https/websocket")
+  Rel(backend,db,"makes sql queries","uses","jdbc")
+  Rel(backend,privateDB,"makes sql queries","uses","jdbc")
+
+  Rel_Back(backend,watchdog,"monitors")
+  Rel_Back(db,watchdog,"monitors")
+
+  Rel(node,db,"writes aggregated data","uses","jdbc")
+
+  Rel(notification,eventBus,"read msgs","uses","websocket")
+  Rel(notification,user,"notifies users-crypto crashes, latest news etc..","uses","firebase,sms,mails")
+
+
+
+}
+
+@enduml
