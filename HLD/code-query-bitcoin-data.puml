@@ -1,0 +1,15 @@
+@startuml query-bitcoin-data
+
+actor User
+
+SelectQueries->GetService : pass sql queries
+
+alt success
+  SelectQueries<-GetService :queriedData
+  User<-SelectQueries :queriedData
+else failure
+   SelectQueries<-GetService :sqlError
+  User<-SelectQueries :sqlError
+end
+
+@enduml
